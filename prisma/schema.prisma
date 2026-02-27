@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum ShelterStatus {
+  OPEN
+  FULL
+  CLOSED
+}
+
+enum NeedPriority {
+  HIGH
+  MED
+  LOW
+}
+
+enum NeedStatus {
+  ACTIVE
+  PAUSED
+  FULFILLED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         Role       @default(OPERATOR)
+  shelterId    String?    @unique
+  shelter      Shelter?   @relation(fields: [shelterId], references: [id], onDelete: SetNull)
+  auditLogs    AuditLog[] @relation("ActorAuditLogs")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([role])
+}
+
+model Shelter {
+  id            String        @id @default(cuid())
+  name          String
+  city          String
+  neighborhood  String
+  address       String
+  lat           Float
+  lng           Float
+  status        ShelterStatus @default(OPEN)
+  capacity      Int
+  occupancy     Int
+  accessible    Boolean       @default(false)
+  acceptsPets   Boolean       @default(false)
+  publicContact String?
+  hours         String?
+  notes         String?
+  needs         Need[]
+  operators     User[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([city])
+  @@index([status])
+  @@index([updatedAt])
+  @@index([name])
+  @@index([neighborhood])
+  @@index([city, status])
+}
+
+model Need {
+  id        String       @id @default(cuid())
+  shelterId String
+  shelter   Shelter      @relation(fields: [shelterId], references: [id], onDelete: Cascade)
+  category  String
+  item      String
+  priority  NeedPriority @default(MED)
+  quantity  Float?
+  unit      String?
+  status    NeedStatus   @default(ACTIVE)
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([shelterId])
+  @@index([priority])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorUser   User?    @relation("ActorAuditLogs", fields: [actorUserId], references: [id], onDelete: SetNull)
+  entityType  String
+  entityId    String
+  action      String
+  diffJson    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorUserId])
+}

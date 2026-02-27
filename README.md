@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# SOS Abrigos MG
+Portal público e painel restrito para **Gestão de Abrigos e Acesso à Informação** em crises de chuvas e enchentes.
 
-## Getting Started
+Stack principal:
+- Next.js 14 (App Router) + TypeScript
+- Tailwind CSS
+- Prisma ORM + Postgres serverless (Neon/Supabase)
+- NextAuth (Credentials: email + senha)
+- Leaflet + OpenStreetMap (com clusters)
 
-First, run the development server:
+## Funcionalidades
+- Portal público sem login:
+  - Busca por nome, bairro e cidade
+  - Filtros por cidade, status, pets, acessibilidade e necessidades urgentes
+  - Lista de abrigos, mapa interativo e página de detalhes
+  - Página "Como ajudar" com itens urgentes agregados do banco
+- Painel restrito com login:
+  - Roles: `ADMIN` e `OPERATOR`
+  - CRUD de abrigos com validações fortes
+  - Gestão de necessidades (itens, prioridade, quantidade, status)
+  - Auditoria simples (`AuditLog`) em alterações
 
+## Requisitos
+- Node.js 20+
+- NPM 10+
+- Banco Postgres (Neon ou Supabase)
+
+## Configuração local
+1. Instale as dependências:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Crie o arquivo `.env`:
+```bash
+cp .env.example .env
+```
+No Windows PowerShell:
+```powershell
+Copy-Item .env.example .env
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Preencha as variáveis no `.env`:
+```env
+DATABASE_URL="postgresql://..."
+NEXTAUTH_SECRET="chave-longa-segura"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Rode migrations:
+```bash
+npm run prisma:migrate -- --name init
+```
 
-## Learn More
+5. Rode seed:
+```bash
+npm run prisma:seed
+```
+O seed limpa os dados, cria usuários de acesso e cadastra abrigos com fonte oficial pública.
 
-To learn more about Next.js, take a look at the following resources:
+6. Inicie o projeto:
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Abra `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usuários de seed
+- Admin:
+  - email: `admin@sosjf.local`
+  - senha: `Admin@123`
+- Operador:
+  - email: `operador@sosjf.local`
+  - senha: `Operador@123`
 
-## Deploy on Vercel
+## Fonte oficial dos abrigos do seed
+- Prefeitura de Juiz de Fora (Defesa Civil):
+  - https://www.pjf.mg.gov.br/noticias/view.php?modo=link2&idnoticia2=88482
+- Referência usada no seed:
+  - atualização publicada em 26/02/2026 às 19h
+  - coordenadas do mapa aproximadas via OpenStreetMap/Nominatim
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
+- `npm run dev`: ambiente local
+- `npm run build`: build de produção
+- `npm run start`: executar build
+- `npm run lint`: lint
+- `npm run prisma:migrate`: migration com Prisma
+- `npm run prisma:seed`: seed inicial
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy na Vercel Free
+1. Suba o projeto para GitHub.
+2. Na Vercel, importe o repositório.
+3. Configure variáveis de ambiente:
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (URL pública da Vercel)
+4. Configure banco Postgres serverless (Neon/Supabase).
+5. Execute migration no banco de produção:
+```bash
+npx prisma migrate deploy
+```
+6. Opcional: rode seed em produção se necessário:
+```bash
+npm run prisma:seed
+```
+
+## Estrutura principal
+- `app/`: rotas públicas, painel e API Route Handlers
+- `components/`: UI pública, mapa e formulários do painel
+- `lib/`: autenticação, permissões, validações, queries e utilidades
+- `prisma/`: schema, migrations e seed
+
+## Segurança e LGPD
+- Coleta mínima de dados (sem CPF)
+- Contato público opcional
+- Controle de acesso por role
+- Logs básicos de alteração em `AuditLog`
