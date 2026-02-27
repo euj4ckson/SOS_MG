@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,15 @@ type NeedRow = {
 type NeedManagerProps = {
   shelterId: string;
   needs: NeedRow[];
+};
+
+type NeedEditForm = {
+  category: string;
+  item: string;
+  priority: "HIGH" | "MED" | "LOW";
+  quantity: string;
+  unit: string;
+  notes: string;
 };
 
 const priorityOptions = [
@@ -47,6 +56,8 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("");
   const [notes, setNotes] = useState("");
+  const [editingNeedId, setEditingNeedId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<NeedEditForm | null>(null);
 
   const categoryItems = useMemo(() => NEED_CATALOG[category] ?? [], [category]);
   const useCustomItem = category === "Outros";
@@ -120,6 +131,83 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
     });
   }
 
+  function startEditNeed(need: NeedRow) {
+    setEditingNeedId(need.id);
+    setEditForm({
+      category: need.category,
+      item: need.item,
+      priority: need.priority,
+      quantity: need.quantity === null ? "" : String(need.quantity),
+      unit: need.unit ?? "",
+      notes: need.notes ?? "",
+    });
+    setFeedback(null);
+  }
+
+  function cancelEditNeed() {
+    setEditingNeedId(null);
+    setEditForm(null);
+  }
+
+  function saveNeed(id: string) {
+    if (!editForm) return;
+
+    const trimmedCategory = editForm.category.trim();
+    const trimmedItem = editForm.item.trim();
+    const parsedQuantity = editForm.quantity.trim();
+
+    if (!trimmedCategory || !trimmedItem) {
+      setFeedback({ type: "error", text: "Categoria e item são obrigatórios." });
+      return;
+    }
+
+    if (parsedQuantity && Number.isNaN(Number(parsedQuantity))) {
+      setFeedback({ type: "error", text: "Quantidade inválida." });
+      return;
+    }
+
+    startTransition(async () => {
+      const response = await fetch(`/api/needs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: trimmedCategory,
+          item: trimmedItem,
+          priority: editForm.priority,
+          quantity: parsedQuantity ? Number(parsedQuantity) : null,
+          unit: editForm.unit.trim(),
+          notes: editForm.notes.trim(),
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setFeedback({ type: "error", text: data?.error ?? "Falha ao salvar edição." });
+        return;
+      }
+
+      setNeeds((prev) =>
+        prev.map((need) =>
+          need.id === id
+            ? {
+                ...need,
+                category: data.category,
+                item: data.item,
+                priority: data.priority,
+                quantity: data.quantity,
+                unit: data.unit,
+                notes: data.notes,
+                status: data.status,
+              }
+            : need,
+        ),
+      );
+      setFeedback({ type: "success", text: "Necessidade atualizada." });
+      cancelEditNeed();
+      router.refresh();
+    });
+  }
+
   function deleteNeed(id: string) {
     startTransition(async () => {
       const response = await fetch(`/api/needs/${id}`, { method: "DELETE" });
@@ -130,6 +218,9 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
 
       setNeeds((prev) => prev.filter((need) => need.id !== id));
       setFeedback({ type: "success", text: "Necessidade removida." });
+      if (editingNeedId === id) {
+        cancelEditNeed();
+      }
       router.refresh();
     });
   }
@@ -268,52 +359,171 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
               <th className="px-3 py-2 font-semibold">Prioridade</th>
               <th className="px-3 py-2 font-semibold">Quantidade</th>
               <th className="px-3 py-2 font-semibold">Status</th>
+              <th className="px-3 py-2 font-semibold">Observações</th>
               <th className="px-3 py-2 font-semibold">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {needs.map((need) => (
-              <tr key={need.id} className="border-t border-slate-200">
-                <td className="px-3 py-2 text-slate-800">
-                  <span className="font-semibold">{need.item}</span>
-                  <div className="text-xs text-slate-500">{need.category}</div>
-                </td>
-                <td className="px-3 py-2 text-slate-700">{getPriorityLabel(need.priority)}</td>
-                <td className="px-3 py-2 text-slate-700">
-                  {need.quantity ?? "-"} {need.unit ?? ""}
-                </td>
-                <td className="px-3 py-2 text-slate-700">
-                  <select
-                    value={need.status}
-                    onChange={(event) =>
-                      updateNeedStatus(
-                        need.id,
-                        event.target.value as "ACTIVE" | "PAUSED" | "FULFILLED",
-                      )
-                    }
-                    className="rounded-md border border-slate-300 px-2 py-1"
-                  >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {getNeedStatusLabel(option.value)}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => deleteNeed(need.id)}
-                    className="rounded-md border border-rose-300 bg-white px-3 py-1.5 font-semibold text-rose-700 hover:bg-rose-50"
-                  >
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {needs.map((need) => {
+              const isEditing = editingNeedId === need.id && editForm;
+
+              return (
+                <tr key={need.id} className="border-t border-slate-200">
+                  <td className="px-3 py-2 text-slate-800">
+                    {isEditing ? (
+                      <div className="space-y-1">
+                        <input
+                          value={editForm.item}
+                          onChange={(event) =>
+                            setEditForm((prev) => (prev ? { ...prev, item: event.target.value } : prev))
+                          }
+                          className="w-full rounded-md border border-slate-300 px-2 py-1"
+                        />
+                        <input
+                          value={editForm.category}
+                          onChange={(event) =>
+                            setEditForm((prev) => (prev ? { ...prev, category: event.target.value } : prev))
+                          }
+                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-semibold">{need.item}</span>
+                        <div className="text-xs text-slate-500">{need.category}</div>
+                      </>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-slate-700">
+                    {isEditing ? (
+                      <select
+                        value={editForm.priority}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev ? { ...prev, priority: event.target.value as "HIGH" | "MED" | "LOW" } : prev,
+                          )
+                        }
+                        className="rounded-md border border-slate-300 px-2 py-1"
+                      >
+                        {priorityOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      getPriorityLabel(need.priority)
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-slate-700">
+                    {isEditing ? (
+                      <div className="flex gap-2">
+                        <input
+                          value={editForm.quantity}
+                          onChange={(event) =>
+                            setEditForm((prev) => (prev ? { ...prev, quantity: event.target.value } : prev))
+                          }
+                          type="number"
+                          min={0}
+                          step="any"
+                          className="w-20 rounded-md border border-slate-300 px-2 py-1"
+                          placeholder="-"
+                        />
+                        <input
+                          value={editForm.unit}
+                          onChange={(event) =>
+                            setEditForm((prev) => (prev ? { ...prev, unit: event.target.value } : prev))
+                          }
+                          className="w-24 rounded-md border border-slate-300 px-2 py-1"
+                          placeholder="un, kg..."
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        {need.quantity ?? "-"} {need.unit ?? ""}
+                      </>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-slate-700">
+                    <select
+                      value={need.status}
+                      onChange={(event) =>
+                        updateNeedStatus(
+                          need.id,
+                          event.target.value as "ACTIVE" | "PAUSED" | "FULFILLED",
+                        )
+                      }
+                      className="rounded-md border border-slate-300 px-2 py-1"
+                      disabled={isPending}
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {getNeedStatusLabel(option.value)}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-slate-700">
+                    {isEditing ? (
+                      <input
+                        value={editForm.notes}
+                        onChange={(event) =>
+                          setEditForm((prev) => (prev ? { ...prev, notes: event.target.value } : prev))
+                        }
+                        className="w-full min-w-40 rounded-md border border-slate-300 px-2 py-1"
+                        placeholder="Observações"
+                      />
+                    ) : (
+                      need.notes ?? "-"
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => saveNeed(need.id)}
+                            disabled={isPending}
+                            className="rounded-md bg-brand-600 px-3 py-1.5 font-semibold text-white hover:bg-brand-700 disabled:opacity-70"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditNeed}
+                            disabled={isPending}
+                            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-70"
+                          >
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startEditNeed(need)}
+                          disabled={isPending || editingNeedId !== null}
+                          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-70"
+                        >
+                          Editar
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => deleteNeed(need.id)}
+                        disabled={isPending || editingNeedId === need.id}
+                        className="rounded-md border border-rose-300 bg-white px-3 py-1.5 font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-70"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {needs.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-4 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-4 text-center text-slate-500">
                   Nenhuma necessidade cadastrada.
                 </td>
               </tr>

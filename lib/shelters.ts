@@ -182,11 +182,23 @@ export async function getShelterCities() {
 export async function getUrgentNeedsAggregate() {
   const cachedFn = unstable_cache(
     async () => {
-      const grouped = await prisma.need.groupBy({
-        by: ["category", "item", "unit", "priority"],
+      const activeNeeds = await prisma.need.findMany({
         where: { status: NeedStatus.ACTIVE },
-        _sum: { quantity: true },
-        _count: { _all: true },
+        orderBy: [{ updatedAt: "desc" }],
+        select: {
+          category: true,
+          item: true,
+          unit: true,
+          priority: true,
+          quantity: true,
+          shelterId: true,
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
       const priorityScore: Record<NeedPriority, number> = {
@@ -195,24 +207,54 @@ export async function getUrgentNeedsAggregate() {
         LOW: 1,
       };
 
-      return grouped
+      const grouped = new Map<
+        string,
+        {
+          category: string;
+          item: string;
+          unit: string | null;
+          priority: NeedPriority;
+          totalQuantity: number | null;
+          sheltersCount: number;
+          targetShelterId: string;
+          targetShelterName: string;
+        }
+      >();
+
+      for (const need of activeNeeds) {
+        const key = `${need.category}||${need.item}||${need.unit ?? ""}||${need.priority}`;
+        const entry = grouped.get(key);
+        if (!entry) {
+          grouped.set(key, {
+            category: need.category,
+            item: need.item,
+            unit: need.unit,
+            priority: need.priority,
+            totalQuantity: need.quantity ?? null,
+            sheltersCount: 1,
+            targetShelterId: need.shelter.id,
+            targetShelterName: need.shelter.name,
+          });
+          continue;
+        }
+
+        entry.sheltersCount += 1;
+        if (need.quantity !== null) {
+          entry.totalQuantity = (entry.totalQuantity ?? 0) + need.quantity;
+        }
+      }
+
+      return Array.from(grouped.values())
         .sort((a, b) => {
           const priorityDelta = priorityScore[b.priority] - priorityScore[a.priority];
           if (priorityDelta !== 0) return priorityDelta;
-          const quantityA = a._sum.quantity ?? 0;
-          const quantityB = b._sum.quantity ?? 0;
+          const quantityA = a.totalQuantity ?? 0;
+          const quantityB = b.totalQuantity ?? 0;
           if (quantityB !== quantityA) return quantityB - quantityA;
-          return b._count._all - a._count._all;
+          return b.sheltersCount - a.sheltersCount;
         })
         .slice(0, 20)
-        .map((entry) => ({
-          category: entry.category,
-          item: entry.item,
-          priority: entry.priority,
-          unit: entry.unit,
-          totalQuantity: entry._sum.quantity,
-          sheltersCount: entry._count._all,
-        }));
+        .map((entry) => entry);
     },
     ["urgent-needs-aggregate"],
     { revalidate: 120, tags: ["shelters"] },

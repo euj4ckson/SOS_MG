@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getUrgentNeedsAggregate } from "@/lib/shelters";
 import { getPriorityLabel } from "@/lib/utils";
 
@@ -49,6 +50,14 @@ export default async function ComoAjudarPage() {
                   {need.unit ? ` ${need.unit}` : ""}
                 </p>
                 <p className="text-xs text-slate-600">{need.sheltersCount} registros ativos em abrigos</p>
+                <div className="mt-3">
+                  <Link
+                    href={`/abrigos/${need.targetShelterId}`}
+                    className="inline-flex items-center rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+                  >
+                    Levar para {need.targetShelterName}
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>
