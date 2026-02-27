@@ -72,6 +72,8 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
     }
 
     startTransition(async () => {
+      const trimmedUnit = unit.trim();
+      const trimmedNotes = notes.trim();
       const response = await fetch(`/api/shelters/${shelterId}/needs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,8 +82,8 @@ export function NeedManager({ shelterId, needs: initialNeeds }: NeedManagerProps
           item: selectedItem,
           priority,
           quantity: quantity ? Number(quantity) : null,
-          unit: unit || null,
-          notes: notes || null,
+          ...(trimmedUnit ? { unit: trimmedUnit } : {}),
+          ...(trimmedNotes ? { notes: trimmedNotes } : {}),
           status: "ACTIVE",
         }),
       });

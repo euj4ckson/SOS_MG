@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeleteShelterButton } from "@/components/painel/delete-shelter-button";
 import { formatDateTime, formatRelativeDate, getShelterStatusLabel, getVacancies } from "@/lib/utils";
 
 type AdminTableProps = {
@@ -49,12 +50,15 @@ export function AdminTable({ shelters }: AdminTableProps) {
                 {formatRelativeDate(shelter.updatedAt)} ({formatDateTime(shelter.updatedAt)})
               </td>
               <td className="px-3 py-2">
-                <Link
-                  href={`/painel/abrigos/${shelter.id}`}
-                  className="rounded-md bg-brand-600 px-3 py-1.5 font-semibold text-white hover:bg-brand-700"
-                >
-                  Editar
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/painel/abrigos/${shelter.id}`}
+                    className="rounded-md bg-brand-600 px-3 py-1.5 font-semibold text-white hover:bg-brand-700"
+                  >
+                    Editar
+                  </Link>
+                  <DeleteShelterButton shelterId={shelter.id} shelterName={shelter.name} />
+                </div>
               </td>
             </tr>
           ))}

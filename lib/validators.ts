@@ -8,6 +8,13 @@ const stringOrUndefined = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
+const nullableStringOrUndefined = z
+  .string()
+  .trim()
+  .nullable()
+  .optional()
+  .transform((value) => (value ? value : undefined));
+
 export const loginSchema = z.object({
   email: z.string().trim().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
@@ -48,9 +55,9 @@ export const needSchema = z.object({
   item: z.string().trim().min(2, "Item obrigatório").max(100),
   priority: z.nativeEnum(NeedPriority),
   quantity: z.number().positive("Quantidade deve ser maior que zero").nullable().optional(),
-  unit: stringOrUndefined.or(z.literal("")),
+  unit: nullableStringOrUndefined,
   status: z.nativeEnum(NeedStatus).default(NeedStatus.ACTIVE),
-  notes: stringOrUndefined.or(z.literal("")),
+  notes: nullableStringOrUndefined,
 });
 
 export const needUpdateSchema = needSchema.partial();
