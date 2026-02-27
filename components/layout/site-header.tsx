@@ -4,7 +4,7 @@ import { LogoutButton } from "@/components/painel/logout-button";
 
 const navLinks = [
   { href: "/", label: "Início" },
-  { href: "/abrigos", label: "Abrigos" },
+  { href: "/abrigos", label: "Abrigos e doações" },
   { href: "/como-ajudar", label: "Como ajudar" },
 ];
 
