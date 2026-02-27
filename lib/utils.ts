@@ -1,4 +1,4 @@
-import { ShelterStatus } from "@prisma/client";
+﻿import { LocationType, ShelterStatus } from "@prisma/client";
 import clsx, { type ClassValue } from "clsx";
 import { differenceInHours, format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -49,6 +49,16 @@ export function getShelterStatusColor(status: ShelterStatus) {
     CLOSED: "bg-rose-100 text-rose-800 border-rose-200",
   };
   return map[status];
+}
+
+export function getLocationTypeLabel(type: LocationType) {
+  return type === "DONATION_POINT" ? "Ponto de doação" : "Abrigo";
+}
+
+export function getLocationTypeColor(type: LocationType) {
+  return type === "DONATION_POINT"
+    ? "bg-blue-100 text-blue-800 border-blue-200"
+    : "bg-slate-100 text-slate-800 border-slate-200";
 }
 
 export function getPriorityLabel(priority: "HIGH" | "MED" | "LOW") {

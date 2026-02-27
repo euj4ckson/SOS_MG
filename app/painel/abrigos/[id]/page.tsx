@@ -55,6 +55,7 @@ export default async function ManageShelterPage({ params }: ManageShelterPagePro
         mode="edit"
         shelterId={shelter.id}
         initialData={{
+          type: shelter.type,
           name: shelter.name,
           city: shelter.city,
           neighborhood: shelter.neighborhood,

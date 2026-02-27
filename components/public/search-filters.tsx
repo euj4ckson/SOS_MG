@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ type FilterState = {
   status?: string;
   accessible?: boolean;
   acceptsPets?: boolean;
+  donationOnly?: boolean;
   needs: string[];
 };
 
@@ -27,6 +28,7 @@ export function SearchFilters({ cities, initial }: SearchFiltersProps) {
   const [status, setStatus] = useState(initial.status ?? "");
   const [accessible, setAccessible] = useState(initial.accessible ?? false);
   const [acceptsPets, setAcceptsPets] = useState(initial.acceptsPets ?? false);
+  const [donationOnly, setDonationOnly] = useState(initial.donationOnly ?? false);
   const [needs, setNeeds] = useState<string[]>(initial.needs ?? []);
 
   const statusOptions = useMemo(
@@ -50,6 +52,7 @@ export function SearchFilters({ cities, initial }: SearchFiltersProps) {
     if (status) params.set("status", status);
     if (accessible) params.set("accessible", "true");
     if (acceptsPets) params.set("acceptsPets", "true");
+    if (donationOnly) params.set("donationOnly", "true");
     if (needs.length > 0) params.set("needs", needs.join(","));
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -60,13 +63,14 @@ export function SearchFilters({ cities, initial }: SearchFiltersProps) {
     setStatus("");
     setAccessible(false);
     setAcceptsPets(false);
+    setDonationOnly(false);
     setNeeds([]);
     router.push(pathname);
   }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
-      <h2 className="mb-3 text-lg font-bold text-slate-900">Buscar abrigo</h2>
+      <h2 className="mb-3 text-lg font-bold text-slate-900">Buscar local</h2>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <SearchBar value={search} onChange={setSearch} />
@@ -120,7 +124,17 @@ export function SearchFilters({ cities, initial }: SearchFiltersProps) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
+        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+          <input
+            checked={donationOnly}
+            onChange={(event) => setDonationOnly(event.target.checked)}
+            type="checkbox"
+            className="h-4 w-4"
+          />
+          Apenas pontos de doação
+        </label>
+
         <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
           <input
             checked={acceptsPets}
@@ -130,6 +144,7 @@ export function SearchFilters({ cities, initial }: SearchFiltersProps) {
           />
           Aceita pets
         </label>
+
         <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
           <input
             checked={accessible}

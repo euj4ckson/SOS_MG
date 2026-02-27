@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { SearchFilters } from "@/components/public/search-filters";
 import { ShelterCard } from "@/components/public/shelter-card";
 import { getPublicShelterList, getShelterCities } from "@/lib/shelters";
@@ -19,6 +19,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const status = pick(searchParams.status)?.trim() as "OPEN" | "FULL" | "CLOSED" | undefined;
   const accessible = parseBooleanParam(pick(searchParams.accessible));
   const acceptsPets = parseBooleanParam(pick(searchParams.acceptsPets));
+  const donationOnly = parseBooleanParam(pick(searchParams.donationOnly));
   const needs = parseNeedFilters(pick(searchParams.needs));
 
   const [cities, sheltersResult] = await Promise.all([
@@ -31,6 +32,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       status,
       accessible,
       acceptsPets,
+      donationOnly,
       needs,
     }),
   ]);
@@ -40,18 +42,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <section className="rounded-2xl bg-slate-900 p-6 text-white shadow-card">
         <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-cyan-200">Portal público</p>
         <h1 className="text-2xl font-bold sm:text-3xl">
-          Gestão de Abrigos e Acesso à Informação em crises de chuvas e enchentes
+          Gestão de abrigos e pontos de doação em crises de chuvas e enchentes
         </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-100 sm:text-base">
-          Consulte vagas, localização e necessidades urgentes dos abrigos. As equipes autorizadas
-          atualizam os dados no painel restrito.
+          Consulte vagas, localização, pontos oficiais de coleta e necessidades urgentes. As equipes
+          autorizadas atualizam os dados no painel restrito.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href="/abrigos"
             className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100"
           >
-            Ver todos os abrigos
+            Ver locais no mapa
           </Link>
           <Link
             href="/como-ajudar"
@@ -70,19 +72,20 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           status,
           accessible,
           acceptsPets,
+          donationOnly,
           needs,
         }}
       />
 
-      <section aria-label="Lista de abrigos" className="space-y-4">
+      <section aria-label="Lista de locais" className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">Abrigos em destaque</h2>
+          <h2 className="text-xl font-bold text-slate-900">Locais em destaque</h2>
           <p className="text-sm text-slate-600">{sheltersResult.pagination.total} resultados encontrados</p>
         </div>
 
         {sheltersResult.items.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-            Nenhum abrigo encontrado com estes filtros.
+            Nenhum local encontrado com estes filtros.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

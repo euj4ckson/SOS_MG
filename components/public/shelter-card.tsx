@@ -1,9 +1,18 @@
 ﻿import Link from "next/link";
-import { getDirectionsLinks, getShelterStatusColor, getShelterStatusLabel, getVacancies } from "@/lib/utils";
+import { LocationType } from "@prisma/client";
+import {
+  getDirectionsLinks,
+  getLocationTypeColor,
+  getLocationTypeLabel,
+  getShelterStatusColor,
+  getShelterStatusLabel,
+  getVacancies,
+} from "@/lib/utils";
 
 type ShelterCardProps = {
   shelter: {
     id: string;
+    type: LocationType;
     name: string;
     city: string;
     neighborhood: string;
@@ -29,6 +38,10 @@ type ShelterCardProps = {
 export function ShelterCard({ shelter }: ShelterCardProps) {
   const vacancies = getVacancies(shelter.capacity, shelter.occupancy);
   const links = getDirectionsLinks(shelter.lat, shelter.lng);
+  const isDonationPoint = shelter.type === "DONATION_POINT";
+  const shouldShowOccupancy = !isDonationPoint && shelter.occupancy > 0;
+  const shouldShowVacancies = !isDonationPoint && vacancies > 0;
+  const shouldShowCapacityInfo = shouldShowOccupancy || shouldShowVacancies;
 
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
@@ -39,24 +52,52 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
             {shelter.neighborhood}, {shelter.city}
           </p>
         </div>
-        <span
-          className={`rounded-full border px-2 py-1 text-xs font-bold ${getShelterStatusColor(
-            shelter.status,
-          )}`}
-        >
-          {getShelterStatusLabel(shelter.status)}
-        </span>
+
+        <div className="flex flex-col items-end gap-1">
+          <span
+            className={`rounded-full border px-2 py-1 text-xs font-bold ${getLocationTypeColor(
+              shelter.type,
+            )}`}
+          >
+            {getLocationTypeLabel(shelter.type)}
+          </span>
+          {!isDonationPoint && (
+            <span
+              className={`rounded-full border px-2 py-1 text-xs font-bold ${getShelterStatusColor(
+                shelter.status,
+              )}`}
+            >
+              {getShelterStatusLabel(shelter.status)}
+            </span>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-slate-700">{shelter.address}</p>
-      <p className="mt-2 text-sm text-slate-700">
-        OcupaÃ§Ã£o: <strong>{shelter.occupancy}</strong> / {shelter.capacity} | Vagas:{" "}
-        <strong>{vacancies}</strong>
-      </p>
-      <p className="mt-1 text-sm text-slate-700">
-        {shelter.accessible ? "Acessivel" : "Sem acessibilidade total"}
-        {shelter.acceptsPets ? " | Aceita pets" : ""}
-      </p>
+
+      {shouldShowCapacityInfo && (
+        <p className="mt-2 text-sm text-slate-700">
+          {shouldShowOccupancy && (
+            <>
+              Ocupação: <strong>{shelter.occupancy}</strong> / {shelter.capacity}
+            </>
+          )}
+          {shouldShowOccupancy && shouldShowVacancies ? " | " : ""}
+          {shouldShowVacancies && (
+            <>
+              Vagas: <strong>{vacancies}</strong>
+            </>
+          )}
+        </p>
+      )}
+
+      {!isDonationPoint && (
+        <p className="mt-1 text-sm text-slate-700">
+          {shelter.accessible ? "Acessível" : "Sem acessibilidade total"}
+          {shelter.acceptsPets ? " | Aceita pets" : ""}
+        </p>
+      )}
+
       {shelter.publicContact && (
         <p className="mt-1 text-sm text-slate-700">Contato: {shelter.publicContact}</p>
       )}
@@ -98,4 +139,3 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
     </article>
   );
 }
-

@@ -18,6 +18,11 @@ enum ShelterStatus {
   CLOSED
 }
 
+enum LocationType {
+  SHELTER
+  DONATION_POINT
+}
+
 enum NeedPriority {
   HIGH
   MED
@@ -47,6 +52,7 @@ model User {
 
 model Shelter {
   id            String        @id @default(cuid())
+  type          LocationType  @default(SHELTER)
   name          String
   city          String
   neighborhood  String
@@ -68,6 +74,7 @@ model Shelter {
 
   @@index([city])
   @@index([status])
+  @@index([type])
   @@index([updatedAt])
   @@index([name])
   @@index([neighborhood])

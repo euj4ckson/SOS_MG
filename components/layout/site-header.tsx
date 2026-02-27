@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/painel/logout-button";
 
@@ -15,7 +15,7 @@ export async function SiteHeader() {
     <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="font-bold text-slate-900">
-          SOS Abrigos MG
+          SOS MG
         </Link>
 
         <nav aria-label="Navegação principal" className="hidden items-center gap-4 md:flex">
@@ -31,7 +31,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {user ? (
+          {user && (
             <>
               <Link
                 href="/painel"
@@ -41,13 +41,6 @@ export async function SiteHeader() {
               </Link>
               <LogoutButton />
             </>
-          ) : (
-            <Link
-              href="/painel/login"
-              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
-            >
-              Entrar
-            </Link>
           )}
         </div>
       </div>

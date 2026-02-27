@@ -1,4 +1,4 @@
-import { NeedPriority, NeedStatus, ShelterStatus } from "@prisma/client";
+﻿import { LocationType, NeedPriority, NeedStatus, ShelterStatus } from "@prisma/client";
 import { z } from "zod";
 import { NEED_FILTER_OPTIONS, SHELTER_PAGE_SIZE } from "./constants";
 
@@ -14,6 +14,7 @@ export const loginSchema = z.object({
 });
 
 const shelterBaseSchema = z.object({
+  type: z.nativeEnum(LocationType).default(LocationType.SHELTER),
   name: z.string().trim().min(3, "Nome obrigatório").max(120),
   city: z.string().trim().min(2, "Cidade obrigatória").max(80),
   neighborhood: z.string().trim().min(2, "Bairro obrigatório").max(80),
@@ -30,16 +31,15 @@ const shelterBaseSchema = z.object({
   notes: stringOrUndefined.or(z.literal("")),
 });
 
-export const shelterSchema = shelterBaseSchema
-  .superRefine((value, ctx) => {
-    if (value.occupancy > value.capacity) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["occupancy"],
-        message: "Ocupação não pode ser maior que a capacidade.",
-      });
-    }
-  });
+export const shelterSchema = shelterBaseSchema.superRefine((value, ctx) => {
+  if (value.occupancy > value.capacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["occupancy"],
+      message: "Ocupação não pode ser maior que a capacidade.",
+    });
+  }
+});
 
 export const shelterUpdateSchema = shelterBaseSchema.partial();
 
@@ -63,6 +63,7 @@ export const shelterQuerySchema = z.object({
   status: z.nativeEnum(ShelterStatus).optional(),
   accessible: z.enum(["true", "false"]).optional(),
   acceptsPets: z.enum(["true", "false"]).optional(),
+  donationOnly: z.enum(["true", "false"]).optional(),
   needs: stringOrUndefined,
 });
 

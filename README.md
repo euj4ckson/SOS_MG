@@ -1,4 +1,4 @@
-﻿# SOS Abrigos MG
+# SOS MG
 Portal público e painel restrito para **Gestão de Abrigos e Acesso à Informação** em crises de chuvas e enchentes.
 
 Stack principal:

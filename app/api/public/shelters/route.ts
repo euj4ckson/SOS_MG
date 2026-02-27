@@ -15,6 +15,7 @@ export async function GET(request: Request) {
     status: searchParams.get("status") ?? undefined,
     accessible: searchParams.get("accessible") ?? undefined,
     acceptsPets: searchParams.get("acceptsPets") ?? undefined,
+    donationOnly: searchParams.get("donationOnly") ?? undefined,
     needs: searchParams.get("needs") ?? undefined,
   });
 
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
     status: parsed.data.status,
     accessible: parseBooleanParam(parsed.data.accessible),
     acceptsPets: parseBooleanParam(parsed.data.acceptsPets),
+    donationOnly: parseBooleanParam(parsed.data.donationOnly),
     needs: parseNeedFilters(parsed.data.needs),
   });
 

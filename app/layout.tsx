@@ -11,7 +11,7 @@ const atkinson = Atkinson_Hyperlegible({
 });
 
 export const metadata: Metadata = {
-  title: "SOS Abrigos MG",
+  title: "SOS MG",
   description:
     "Portal público de gestão de abrigos e acesso à informação para crises de chuvas e enchentes.",
 };

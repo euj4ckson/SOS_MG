@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 type ShelterFormData = {
+  type: "SHELTER" | "DONATION_POINT";
   name: string;
   city: string;
   neighborhood: string;
@@ -27,6 +28,7 @@ type ShelterFormProps = {
 };
 
 const defaultData: ShelterFormData = {
+  type: "SHELTER",
   name: "",
   city: "",
   neighborhood: "",
@@ -57,18 +59,21 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
   }
 
   function parsePayload() {
+    const isDonationPoint = form.type === "DONATION_POINT";
+
     const payload = {
+      type: form.type,
       name: form.name.trim(),
       city: form.city.trim(),
       neighborhood: form.neighborhood.trim(),
       address: form.address.trim(),
       lat: Number(form.lat),
       lng: Number(form.lng),
-      status: form.status,
-      capacity: Number(form.capacity),
-      occupancy: Number(form.occupancy),
-      accessible: form.accessible,
-      acceptsPets: form.acceptsPets,
+      status: isDonationPoint ? "OPEN" : form.status,
+      capacity: isDonationPoint ? 0 : Number(form.capacity),
+      occupancy: isDonationPoint ? 0 : Number(form.occupancy),
+      accessible: isDonationPoint ? false : form.accessible,
+      acceptsPets: isDonationPoint ? false : form.acceptsPets,
       publicContact: form.publicContact.trim() || undefined,
       hours: form.hours.trim() || undefined,
       notes: form.notes.trim() || undefined,
@@ -122,14 +127,14 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
       if (!response.ok) {
         setFeedback({
           type: "error",
-          text: data?.error ?? "Não foi possível salvar o abrigo.",
+          text: data?.error ?? "Não foi possível salvar o local.",
         });
         return;
       }
 
       setFeedback({
         type: "success",
-        text: mode === "create" ? "Abrigo criado com sucesso." : "Abrigo atualizado com sucesso.",
+        text: mode === "create" ? "Local criado com sucesso." : "Local atualizado com sucesso.",
       });
 
       if (mode === "create" && data?.id) {
@@ -141,10 +146,12 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
     });
   }
 
+  const isDonationPoint = form.type === "DONATION_POINT";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
       <h2 className="text-lg font-bold text-slate-900">
-        {mode === "create" ? "Cadastrar novo abrigo" : "Dados do abrigo"}
+        {mode === "create" ? "Cadastrar novo local" : "Dados do local"}
       </h2>
       <p className="text-sm text-slate-600">
         Geocodificação é opcional. Informe latitude e longitude manualmente, se necessário.
@@ -152,7 +159,19 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="text-sm font-semibold text-slate-700">
-          Nome do abrigo
+          Tipo de local
+          <select
+            value={form.type}
+            onChange={(event) => update("type", event.target.value as ShelterFormData["type"])}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="SHELTER">Abrigo</option>
+            <option value="DONATION_POINT">Ponto de doação</option>
+          </select>
+        </label>
+
+        <label className="text-sm font-semibold text-slate-700">
+          Nome do local
           <input
             value={form.name}
             onChange={(event) => update("name", event.target.value)}
@@ -160,6 +179,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Cidade
           <input
@@ -169,6 +189,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Bairro
           <input
@@ -178,6 +199,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Endereço completo
           <input
@@ -187,6 +209,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Latitude
           <input
@@ -198,6 +221,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Longitude
           <input
@@ -209,40 +233,48 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             required
           />
         </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Status
-          <select
-            value={form.status}
-            onChange={(event) => update("status", event.target.value as ShelterFormData["status"])}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          >
-            <option value="OPEN">Aberto</option>
-            <option value="FULL">Lotado</option>
-            <option value="CLOSED">Encerrado</option>
-          </select>
-        </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Capacidade total
-          <input
-            type="number"
-            min={0}
-            value={form.capacity}
-            onChange={(event) => update("capacity", event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            required
-          />
-        </label>
-        <label className="text-sm font-semibold text-slate-700">
-          Ocupação atual
-          <input
-            type="number"
-            min={0}
-            value={form.occupancy}
-            onChange={(event) => update("occupancy", event.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            required
-          />
-        </label>
+
+        {!isDonationPoint && (
+          <>
+            <label className="text-sm font-semibold text-slate-700">
+              Status
+              <select
+                value={form.status}
+                onChange={(event) => update("status", event.target.value as ShelterFormData["status"])}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="OPEN">Aberto</option>
+                <option value="FULL">Lotado</option>
+                <option value="CLOSED">Encerrado</option>
+              </select>
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Capacidade total
+              <input
+                type="number"
+                min={0}
+                value={form.capacity}
+                onChange={(event) => update("capacity", event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                required
+              />
+            </label>
+
+            <label className="text-sm font-semibold text-slate-700">
+              Ocupação atual
+              <input
+                type="number"
+                min={0}
+                value={form.occupancy}
+                onChange={(event) => update("occupancy", event.target.value)}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                required
+              />
+            </label>
+          </>
+        )}
+
         <label className="text-sm font-semibold text-slate-700">
           Contato público (telefone/WhatsApp)
           <input
@@ -251,6 +283,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
+
         <label className="text-sm font-semibold text-slate-700">
           Horários de funcionamento
           <input
@@ -261,26 +294,28 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
         </label>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.accessible}
-            onChange={(event) => update("accessible", event.target.checked)}
-            className="h-4 w-4"
-          />
-          Abrigo acessível para cadeirante
-        </label>
-        <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.acceptsPets}
-            onChange={(event) => update("acceptsPets", event.target.checked)}
-            className="h-4 w-4"
-          />
-          Aceita pets
-        </label>
-      </div>
+      {!isDonationPoint && (
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.accessible}
+              onChange={(event) => update("accessible", event.target.checked)}
+              className="h-4 w-4"
+            />
+            Abrigo acessível para cadeirante
+          </label>
+          <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.acceptsPets}
+              onChange={(event) => update("acceptsPets", event.target.checked)}
+              className="h-4 w-4"
+            />
+            Aceita pets
+          </label>
+        </div>
+      )}
 
       <label className="block text-sm font-semibold text-slate-700">
         Observações
@@ -309,7 +344,7 @@ export function ShelterForm({ mode, shelterId, initialData }: ShelterFormProps) 
         disabled={isPending}
         className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-70"
       >
-        {isPending ? "Salvando..." : "Salvar abrigo"}
+        {isPending ? "Salvando..." : "Salvar local"}
       </button>
     </form>
   );

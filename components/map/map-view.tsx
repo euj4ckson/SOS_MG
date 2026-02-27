@@ -1,13 +1,14 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
+import { LocationType } from "@prisma/client";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import { getShelterStatusLabel } from "@/lib/utils";
+import { getLocationTypeLabel, getShelterStatusLabel } from "@/lib/utils";
 
 const iconRetinaUrl = "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png";
 const iconUrl = "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png";
@@ -17,6 +18,7 @@ L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl });
 
 type MapShelter = {
   id: string;
+  type: LocationType;
   name: string;
   city: string;
   neighborhood: string;
@@ -59,7 +61,10 @@ export function MapView({ shelters, className, zoom = 12 }: MapViewProps) {
                   <p className="text-sm">
                     {shelter.neighborhood}, {shelter.city}
                   </p>
-                  <p className="text-sm">Status: {getShelterStatusLabel(shelter.status)}</p>
+                  <p className="text-sm">Tipo: {getLocationTypeLabel(shelter.type)}</p>
+                  {shelter.type === "SHELTER" && (
+                    <p className="text-sm">Status: {getShelterStatusLabel(shelter.status)}</p>
+                  )}
                   <Link href={`/abrigos/${shelter.id}`} className="text-sm font-semibold text-blue-700 underline">
                     Ver detalhes
                   </Link>

@@ -16,6 +16,7 @@ export type ShelterListFilters = {
   status?: ShelterStatus;
   accessible?: boolean;
   acceptsPets?: boolean;
+  donationOnly?: boolean;
   needs?: string[];
 };
 
@@ -48,6 +49,10 @@ function buildShelterWhere(filters: ShelterListFilters): Prisma.ShelterWhereInpu
 
   if (typeof filters.acceptsPets === "boolean") {
     where.push({ acceptsPets: filters.acceptsPets });
+  }
+
+  if (filters.donationOnly) {
+    where.push({ type: "DONATION_POINT" });
   }
 
   if (filters.needs?.length) {
@@ -85,6 +90,7 @@ async function queryPublicShelters(filters: ShelterListFilters) {
       take: pageSize,
       select: {
         id: true,
+        type: true,
         name: true,
         city: true,
         neighborhood: true,
@@ -224,6 +230,7 @@ export async function getSheltersForManagement(user: {
       where: { id: user.shelterId },
       select: {
         id: true,
+        type: true,
         name: true,
         city: true,
         neighborhood: true,
@@ -240,6 +247,7 @@ export async function getSheltersForManagement(user: {
     orderBy: [{ updatedAt: "desc" }],
     select: {
       id: true,
+      type: true,
       name: true,
       city: true,
       neighborhood: true,

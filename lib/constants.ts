@@ -1,4 +1,4 @@
-export const SHELTER_PAGE_SIZE = 8;
+﻿export const SHELTER_PAGE_SIZE = 8;
 export const SHELTER_UPDATE_STALE_HOURS = 6;
 
 export const NEED_FILTER_OPTIONS = [

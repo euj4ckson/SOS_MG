@@ -8,6 +8,7 @@ import {
   formatDateTime,
   formatRelativeDate,
   getDirectionsLinks,
+  getLocationTypeLabel,
   getShelterStatusLabel,
   getVacancies,
   isDataStale,
@@ -25,12 +26,16 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
   const isStale = isDataStale(shelter.updatedAt);
   const links = getDirectionsLinks(shelter.lat, shelter.lng);
   const vacancies = getVacancies(shelter.capacity, shelter.occupancy);
+  const isDonationPoint = shelter.type === "DONATION_POINT";
+  const shouldShowOccupancy = !isDonationPoint && shelter.occupancy > 0;
+  const shouldShowVacancies = !isDonationPoint && vacancies > 0;
+  const shouldShowCapacityInfo = shouldShowOccupancy || shouldShowVacancies;
 
   return (
     <div className="space-y-6">
       <nav className="text-sm text-slate-600">
         <Link href="/abrigos" className="font-semibold text-brand-700 underline">
-          Voltar para abrigos
+          Voltar para locais
         </Link>
       </nav>
 
@@ -42,49 +47,74 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
               {shelter.neighborhood}, {shelter.city}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Status atual: <strong>{getShelterStatusLabel(shelter.status)}</strong>
+              Tipo: <strong>{getLocationTypeLabel(shelter.type)}</strong>
             </p>
+            {!isDonationPoint && (
+              <p className="mt-1 text-sm text-slate-600">
+                Status atual: <strong>{getShelterStatusLabel(shelter.status)}</strong>
+              </p>
+            )}
           </div>
           <div className="text-right text-sm text-slate-600">
-            <p>Ãšltima atualizaÃ§Ã£o: {formatRelativeDate(shelter.updatedAt)}</p>
+            <p>Última atualização: {formatRelativeDate(shelter.updatedAt)}</p>
             <p>({formatDateTime(shelter.updatedAt)})</p>
           </div>
         </div>
 
         {isStale && (
           <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-            Dados podem estar desatualizados; Ãºltimo update {formatRelativeDate(shelter.updatedAt)}.
+            Dados podem estar desatualizados; último update {formatRelativeDate(shelter.updatedAt)}.
           </div>
         )}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-2 text-sm text-slate-700">
             <p>
-              <strong>EndereÃ§o:</strong> {shelter.address}
+              <strong>Endereço:</strong> {shelter.address}
             </p>
             <p>
-              <strong>Contato pÃºblico:</strong> {shelter.publicContact ?? "NÃ£o informado"}
+              <strong>Contato público:</strong> {shelter.publicContact ?? "Não informado"}
             </p>
             <p>
-              <strong>HorÃ¡rio:</strong> {shelter.hours ?? "NÃ£o informado"}
+              <strong>Horário:</strong> {shelter.hours ?? "Não informado"}
             </p>
-            <p>
-              <strong>Capacidade:</strong> {shelter.capacity} | <strong>OcupaÃ§Ã£o:</strong>{" "}
-              {shelter.occupancy} | <strong>Vagas:</strong> {vacancies}
-            </p>
-            <p>
-              <strong>Acessibilidade:</strong> {shelter.accessible ? "Sim" : "NÃ£o"}
-            </p>
-            {shelter.acceptsPets && (
+
+            {shouldShowCapacityInfo && (
               <p>
-                <strong>Aceita pets:</strong> Sim
+                {shouldShowOccupancy && (
+                  <>
+                    <strong>Capacidade:</strong> {shelter.capacity} | <strong>Ocupação:</strong>{" "}
+                    {shelter.occupancy}
+                  </>
+                )}
+                {shouldShowOccupancy && shouldShowVacancies ? " | " : ""}
+                {shouldShowVacancies && (
+                  <>
+                    <strong>Vagas:</strong> {vacancies}
+                  </>
+                )}
               </p>
             )}
+
+            {!isDonationPoint && (
+              <>
+                <p>
+                  <strong>Acessibilidade:</strong> {shelter.accessible ? "Sim" : "Não"}
+                </p>
+                {shelter.acceptsPets && (
+                  <p>
+                    <strong>Aceita pets:</strong> Sim
+                  </p>
+                )}
+              </>
+            )}
+
             {shelter.notes && (
               <p>
-                <strong>Regras e observaÃ§Ãµes:</strong> {shelter.notes}
+                <strong>Regras e observações:</strong> {shelter.notes}
               </p>
             )}
+
             <div className="flex flex-wrap gap-2 pt-2">
               <CopyAddressButton address={shelter.address} />
               <a
@@ -110,6 +140,7 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
             shelters={[
               {
                 id: shelter.id,
+                type: shelter.type,
                 name: shelter.name,
                 city: shelter.city,
                 neighborhood: shelter.neighborhood,
@@ -131,4 +162,3 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
     </div>
   );
 }
-
