@@ -91,12 +91,14 @@ export function ShelterCard({ shelter }: ShelterCardProps) {
         </p>
       )}
 
-      {!isDonationPoint && (
-        <p className="mt-1 text-sm text-slate-700">
-          {shelter.accessible ? "Acessível" : "Sem acessibilidade total"}
-          {shelter.acceptsPets ? " | Aceita pets" : ""}
-        </p>
-      )}
+      {!isDonationPoint && (() => {
+        const highlights: string[] = [];
+        if (shelter.accessible) highlights.push("Acessível");
+        if (shelter.acceptsPets) highlights.push("Aceita pets");
+        if (highlights.length === 0) return null;
+
+        return <p className="mt-1 text-sm text-slate-700">{highlights.join(" | ")}</p>;
+      })()}
 
       {shelter.publicContact && (
         <p className="mt-1 text-sm text-slate-700">Contato: {shelter.publicContact}</p>
