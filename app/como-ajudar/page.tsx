@@ -53,7 +53,7 @@ export default async function ComoAjudarPage() {
                     {need.totalQuantity ? ` - ${need.totalQuantity}` : ""}
                     {need.unit ? ` ${need.unit}` : ""}
                   </p>
-                  <p className="text-xs text-slate-600">{need.sheltersCount} registros ativos em abrigos</p>
+                  <p className="text-xs text-slate-600">{need.sheltersCount} registros ativos</p>
                   <div className="mt-3">
                     <Link
                       href={href}
