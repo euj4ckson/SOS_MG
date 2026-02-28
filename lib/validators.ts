@@ -1,6 +1,6 @@
-﻿import { LocationType, NeedPriority, NeedStatus, ShelterStatus } from "@prisma/client";
+import { LocationType, NeedPriority, NeedStatus, ShelterStatus } from "@prisma/client";
 import { z } from "zod";
-import { NEED_FILTER_OPTIONS, SHELTER_PAGE_SIZE } from "./constants";
+import { SHELTER_PAGE_SIZE } from "./constants";
 
 const stringOrUndefined = z
   .string()
@@ -81,7 +81,6 @@ export function parseNeedFilters(rawNeeds?: string) {
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
 
-  return normalized.filter((value) =>
-    NEED_FILTER_OPTIONS.some((option) => option.toLowerCase() === value),
-  );
+  const deduped = Array.from(new Set(normalized));
+  return deduped.slice(0, 10).map((value) => value.slice(0, 80));
 }
