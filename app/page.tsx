@@ -79,7 +79,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <section aria-label="Lista de locais" className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">Locais em destaque</h2>
+          <h2 className="text-xl font-bold text-slate-900">Todos Locais Cadastrados</h2>
           <p className="text-sm text-slate-600">{sheltersResult.pagination.total} resultados encontrados</p>
         </div>
 
