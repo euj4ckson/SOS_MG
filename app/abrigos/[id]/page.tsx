@@ -11,7 +11,6 @@ import {
   getLocationTypeLabel,
   getShelterStatusLabel,
   getVacancies,
-  isDataStale,
 } from "@/lib/utils";
 
 type ShelterDetailPageProps = {
@@ -23,7 +22,6 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
   if (!shelter) notFound();
 
   const activeNeeds = shelter.needs.filter((need) => need.status === "ACTIVE");
-  const isStale = isDataStale(shelter.updatedAt);
   const links = getDirectionsLinks(shelter.lat, shelter.lng);
   const vacancies = getVacancies(shelter.capacity, shelter.occupancy);
   const isDonationPoint = shelter.type === "DONATION_POINT";
