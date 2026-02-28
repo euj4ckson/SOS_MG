@@ -63,7 +63,7 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
 
         {isStale && (
           <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-            Dados podem estar desatualizados; último update {formatRelativeDate(shelter.updatedAt)}.
+            último update {formatRelativeDate(shelter.updatedAt)}.
           </div>
         )}
 
