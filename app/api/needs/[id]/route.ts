@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildDiff, logAudit } from "@/lib/audit";
 import { canAccessShelter, requireApiUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { sanitizeNeedData } from "@/lib/text-normalization";
 import { needUpdateSchema } from "@/lib/validators";
 
 export async function PATCH(
@@ -34,12 +35,14 @@ export async function PATCH(
       );
     }
 
+    const sanitized = sanitizeNeedData(parsed.data);
+
     const updated = await prisma.need.update({
       where: { id: context.params.id },
       data: {
-        ...parsed.data,
-        unit: parsed.data.unit ?? undefined,
-        notes: parsed.data.notes ?? undefined,
+        ...sanitized,
+        unit: sanitized.unit ?? undefined,
+        notes: sanitized.notes ?? undefined,
       },
     });
 

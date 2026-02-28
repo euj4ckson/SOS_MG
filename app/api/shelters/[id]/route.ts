@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildDiff, logAudit } from "@/lib/audit";
 import { canAccessShelter, requireApiUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { sanitizeShelterData } from "@/lib/text-normalization";
 import { shelterUpdateSchema } from "@/lib/validators";
 
 export async function GET(
@@ -75,7 +76,7 @@ export async function PATCH(
 
     const updated = await prisma.shelter.update({
       where: { id: context.params.id },
-      data: parsed.data,
+      data: sanitizeShelterData(parsed.data),
     });
 
     await logAudit({

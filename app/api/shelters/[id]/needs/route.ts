@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit";
 import { canAccessShelter, requireApiUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { sanitizeNeedData } from "@/lib/text-normalization";
 import { needSchema } from "@/lib/validators";
 
 export async function GET(
@@ -53,16 +54,18 @@ export async function POST(
       );
     }
 
+    const sanitized = sanitizeNeedData(parsed.data);
+
     const created = await prisma.need.create({
       data: {
         shelterId: context.params.id,
-        category: parsed.data.category,
-        item: parsed.data.item,
-        priority: parsed.data.priority,
-        quantity: parsed.data.quantity ?? null,
-        unit: parsed.data.unit || null,
-        status: parsed.data.status,
-        notes: parsed.data.notes || null,
+        category: sanitized.category,
+        item: sanitized.item,
+        priority: sanitized.priority,
+        quantity: sanitized.quantity ?? null,
+        unit: sanitized.unit || null,
+        status: sanitized.status,
+        notes: sanitized.notes || null,
       },
     });
 

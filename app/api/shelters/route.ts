@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit";
 import { requireApiUser } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
+import { sanitizeShelterData } from "@/lib/text-normalization";
 import { shelterSchema } from "@/lib/validators";
 
 function parsePage(value: string | null) {
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     }
 
     const created = await prisma.shelter.create({
-      data: parsed.data,
+      data: sanitizeShelterData(parsed.data),
     });
 
     await logAudit({
