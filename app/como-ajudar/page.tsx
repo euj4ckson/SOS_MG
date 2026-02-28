@@ -16,9 +16,10 @@ export default async function ComoAjudarPage() {
         </p>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-700">
           <li>Priorize itens urgentes listados abaixo.</li>
-          <li>Entregue no horário informado por cada abrigo para evitar filas.</li>
+          <li>Confirme a validade e a integridade dos alimentos.</li>
           <li>Itens de higiene e água têm alta rotatividade em períodos de chuva intensa.</li>
           <li>Se possível, organize doações em kits prontos (ex.: higiene pessoal).</li>
+
         </ul>
       </section>
 
