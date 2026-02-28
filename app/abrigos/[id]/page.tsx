@@ -61,11 +61,7 @@ export default async function ShelterDetailPage({ params }: ShelterDetailPagePro
           </div>
         </div>
 
-        {isStale && (
-          <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-            último update {formatRelativeDate(shelter.updatedAt)}.
-          </div>
-        )}
+       
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-2 text-sm text-slate-700">
